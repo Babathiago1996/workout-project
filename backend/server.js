@@ -16,6 +16,9 @@ app.use((req, res, next)=>{
 })
 app.use(express.json())
 app.use(cors())
+app.get("/", (req,res)=>{
+  res.status(200).json({message:"backend is running "})
+})
 
 
 // routes
