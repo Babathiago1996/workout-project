@@ -6,43 +6,54 @@ import { useWorkoutContext } from "../hooks/useWorkoutContext";
 import { ToastContainer, toast } from "react-toastify";
 import Loader from "../components/Loader";
 import { useRef } from "react";
-import {BiDumbbell} from "react-icons/bi"
-import {FiFrown} from "react-icons/fi"
+import { BiDumbbell } from "react-icons/bi";
+import { FiFrown } from "react-icons/fi";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 const Home = () => {
   const { workouts, dispatch } = useWorkoutContext();
-  const [isloading, setisLoading]=useState(true)
+  const [isloading, setisLoading] = useState(true);
+  const { user } = useAuthContext();
+  const {dispatch:guy}=useAuthContext()
 
- 
-  const hasShownToast=useRef(false)
+  const hasShownToast = useRef(false);
 
   useEffect(() => {
     const fetchdata = async () => {
-        try {
-            const response = await fetch(
-              "https://workout-project-1.onrender.com/api/workouts"
-            );
-            const json = await response.json();
+      if (!user || !user.token) {
+        toast.error("You're not logged in");
+        setisLoading(false);
+        return;
+      }
+      try {
+        const response = await fetch(
+          "https://workout-project-1.onrender.com/api/workouts",
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+        const json = await response.json();
 
-            if (response.ok) {
-              dispatch({ type: "SET_WORKOUTS", payload: json });
-              if (json.length === 0 && !hasShownToast.current) {
-                toast.info("No workouts Found")
-                hasShownToast.current=true
-              }
-            } else {
-              toast.error("Failed to fetch workouts");
-            }  
-        } catch (error) {
-          toast.error("Network error fetching workouts")  
-        }finally{
-            setisLoading(false);
-
+        if (response.ok) {
+          dispatch({ type: "SET_WORKOUTS", payload: json })
+          guy({type:"LOGIN", payload:user})
+          if (json.length === 0 && !hasShownToast.current) {
+            toast.info("No workouts Found");
+            hasShownToast.current = true;
+          }
+        } else {
+          toast.error("Failed to fetch workouts");
         }
-     
+      } catch (error) {
+        toast.error("Network error fetching workouts");
+      } finally {
+        setisLoading(false);
+      }
     };
     fetchdata();
-  }, [dispatch]);
+  }, [dispatch, user]);
   return (
     <div className="flex flex-col md:flex-row p-4 gap-8 max-w-7xl mx-auto">
       <div className="md:w-2/3 space-y-4">
@@ -54,13 +65,13 @@ const Home = () => {
             return <WorkoutDetails key={workout._id} workout={workout} />;
           })
         ) : (
-          <p className="text-center text-gray-500 text-lg md:text-[30px] font-bold mt-10 flex flex-col items-center">
+          <div className="text-center text-gray-500 text-lg md:text-[30px] font-bold mt-10 flex flex-col items-center">
             <div className="flex gap-1">
               <FiFrown className="text-7xl text-blue-500 mb-2" />
               <BiDumbbell className="text-7xl text-blue-500 mb-2" />
             </div>
             No workouts Found
-          </p>
+          </div>
         )}
       </div>
       <div className="md:w-1/3 bg-white shadow-md rounded-xl p-4 border border-gray-200">

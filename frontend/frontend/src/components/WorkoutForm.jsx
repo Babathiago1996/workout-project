@@ -3,6 +3,7 @@ import { useWorkoutContext } from '../hooks/useWorkoutContext'
 import ClipLoader from "react-spinners/ClipLoader";
 import { ToastContainer,toast } from 'react-toastify';
 import {FaClipboardCheck} from "react-icons/fa"
+import { useAuthContext } from '../hooks/useAuthContext';
 
 
 const WorkoutForm = () => {
@@ -12,23 +13,31 @@ const WorkoutForm = () => {
     const[error, setError]=useState(null)
     const[isloading, setisLoading]=useState(false)
 const {dispatch}=useWorkoutContext()
+const {user}=useAuthContext()
 
     const handleSubmit =async (e)=>{
-      setisLoading(true)
-e.preventDefault()
+      e.preventDefault();
+      setisLoading(true);
+
+      if(!user){
+        toast.error("you must be logged in")
+        return
+      }
 const workout={title,load,reps}
 const response = await fetch(
-  "https://workout-project-1.onrender.com/api/workouts", {
-    method:"POST",
-    body:JSON.stringify(workout),
-    headers:{
-        "Content-Type":"application/json"
-    }
+  "https://workout-project-1.onrender.com/api/workouts",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:`Bearer ${user.token}`,
+    },
+    body: JSON.stringify(workout),
   }
 );
 const json=await response.json()
 if(!response.ok){
-setError(json.error)
+setError(json.error || "workout creation failed")
 toast.error("Error Adding Workout")
 }
 if(response.ok){

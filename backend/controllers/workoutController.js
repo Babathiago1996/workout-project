@@ -1,5 +1,6 @@
 const Workout = require("../models/workoutmodel");
 const mongoose=require("mongoose")
+const requireAuth=require("../middleware/requireAuth")
 
 // create workout
 const createWorkout=async (req, res)=>{
@@ -15,10 +16,16 @@ const createWorkout=async (req, res)=>{
 }
 // get all workout
 const getAllworkout=async (req,res)=>{
-  const user_id = req.user._id;
+  try { console.log("user id", req.user?._id)
+    const user_id = req.user._id;
 
-    const workout=await Workout.find({user_id}).sort({createdAt:-1})
-    res.status(200).json(workout)
+    const workout = await Workout.find({ user_id }).sort({ createdAt: -1 });
+    res.status(200).json(workout);
+  } catch (error) {
+    console.error("error in getallworkout", error)
+    res.status(500).json({error: "server error"})
+  }
+  
 }
 const getSingleworkout=async (req, res)=>{
     
@@ -38,7 +45,9 @@ const getSingleworkout=async (req, res)=>{
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(404).json({ error: "no such workout" });
         }
-        const workout=await Workout.findOneAndUpdate({_id:id}, {...req.body})
+        const user_id = req.user._id;
+
+        const workout=await Workout.findOneAndUpdate({_id:id, user_id}, {...req.body})
         if (!workout) {
           return res.status(404).json({ error: "workout not found" });
         }
@@ -46,10 +55,13 @@ const getSingleworkout=async (req, res)=>{
     }
     const deleteWorkout=async(req,res)=>{
         const {id}=req.params
+        const user_id = req.user._id;
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(404).json({ error: "no such workout" });
         }
-        const workout=await Workout.findOneAndDelete({_id:id})
+
+        const workout=await Workout.findOneAndDelete({_id:id, user_id})
         if (!workout) {
           return res.status(404).json({ error: "workout not found" });
         }

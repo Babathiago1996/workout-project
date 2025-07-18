@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import moment from "moment";
 import ShowModal from "./ShowModal";
 import { ToastContainer, toast } from "react-toastify";
+import {useAuthContext} from "../hooks/useAuthContext"
 
 const WorkoutDetails = ({ workout }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,7 +13,8 @@ const WorkoutDetails = ({ workout }) => {
   const [showModal, setShowModal] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [isdeleting, setIsDeleting] = useState(false);
-
+  
+const {user}=useAuthContext()
   const openModal = () => {
     setShowModal(true);
     setTimeout(() => {
@@ -35,11 +37,18 @@ const WorkoutDetails = ({ workout }) => {
     //   "Are your sure you want to delete this workout ?"
     // );
     // if (!confirmed) return;
+
+    if(!user){
+      toast.error("you must be logged in")
+      return
+    }
     setIsDeleting(true);
     try {
       const response = await fetch(
         `https://workout-project-1.onrender.com/api/workouts/${workout._id}`,
-        { method: "DELETE" }
+        { method: "DELETE", headers:{
+          Authorization:`Bearer ${user.token}`
+        }}
       );
       const json = await response.json();
       if (response.ok) {
@@ -62,6 +71,10 @@ const WorkoutDetails = ({ workout }) => {
     setIsEditing(false);
   };
   const handleSave = async () => {
+    if(!user){
+      toast.error("you must be logged in")
+      return
+    }
     if (
       title === workout.title &&
       load === workout.load &&
@@ -78,6 +91,7 @@ const WorkoutDetails = ({ workout }) => {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization:`Bearer ${user.token}`
           },
           body: JSON.stringify(updateWorkout),
         }
@@ -88,13 +102,13 @@ const WorkoutDetails = ({ workout }) => {
         toast.error("server error");
       } else {
         setError(null);
-        setIsEditing(false);
-        window.location.reload();
+        setIsEditing(false)
         toast.success("Workout Updated Successfully");
+        
+        window.location.reload();
       }
     } catch (error) {
-      setError("Something went wrong");
-      toast.error("Network disconnect");
+      toast.error("Network error");
     }
   };
 

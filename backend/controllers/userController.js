@@ -65,7 +65,7 @@ const verifyOTP = async (req, res) => {
       return res
         .status(200)
         .json({
-          message: "Email verified successfuuly",
+          message: "Email verified successfully",
           token,
           email: user.email,
         });
@@ -74,7 +74,7 @@ const verifyOTP = async (req, res) => {
     }
   } catch (error) {
     console.error("verify otp error:", error.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 const forgotPassword = async (req, res) => {
@@ -96,7 +96,7 @@ const forgotPassword = async (req, res) => {
     res.status(200).json({ message: "OTP for your password reset" });
   } catch (error) {
     console.error("forgot password error ", error.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: error.message });
   }
 };
 
